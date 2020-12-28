@@ -12,11 +12,35 @@ class Store {
     // this.$options = options
     this._mutations = options.mutations
     this._actions = options.actions
+    this._wrappedGetters = options.getters
+
+    // 定义computed选项
+    const computed = {}
+    // 对外暴露的getters属性
+    this.getters = {}
+    // 把当前实例存储
+    const store = this
+    // 遍历getters里面传进来的方法名
+    Object.keys(this._wrappedGetters).forEach(key => {
+      // 获取用户定义的getters方法
+      const fn = store._wrappedGetters[key]
+      // 把当前方法转化为computed无参形式
+      computed[key] = function () {
+        return fn(store.state)
+      }
+
+      // 给getters定义只读属性
+      Object.defineProperty(store.getters, key, {
+        get: () => store._vm[key]
+      })
+    })
+
     // 2. 响应式处理state，可以直接利用vue里面的data来设置响应式数据
     this._vm = new Vue({
       data: {
         $$state: options.state
-      }
+      },
+      computed
     })
 
     // 由于在使用的时候有可能this会丢失，所以需要把this绑死

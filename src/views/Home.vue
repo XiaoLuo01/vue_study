@@ -8,6 +8,7 @@
     <div @click="$store.dispatch('AddCounter')">
       async counter: {{ $store.state.counter }}
     </div>
+    <div>double counter: {{ $store.getters.doubleCounter }}</div>
   </div>
 </template>
 
