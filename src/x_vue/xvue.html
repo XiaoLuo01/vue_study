@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">
+    <p>{{counter}}</p>
+    <p x-text="counter"></p>
+    <button @click="addCounter">AddCounter</button>
+    <p x-html="desc"></p>
+    <input type="text" x-model="desc">
+    <p>{{list}}</p>
+  </div>
+  <script src="./xvue.js"></script>
+  <!-- <script src="./../../node_modules/vue/dist/vue.js"></script> -->
+  <script>
+    const app = new XVue({
+      el:'#app',
+      data:{
+        counter:1,
+        desc:'welcome, <span style="color:red">carol</span>',
+        username:'',
+        list:['写代码','打游戏']
+      },
+      methods: {
+        addCounter() {
+          this.counter++
+        },
+        addList() {
+          this.list.push()
+        }
+      },
+    })
+  </script>
+</body>
+</html>
