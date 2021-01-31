@@ -8,13 +8,14 @@
 <body>
   <div id="app">
     <p>{{counter}}</p>
-    <p x-text="counter"></p>
+    <!-- <p x-text="counter"></p>
     <button @click="addCounter">AddCounter</button>
     <p x-html="desc"></p>
     <input type="text" x-model="desc">
-    <p>{{list}}</p>
+    <p>{{list}}</p> -->
   </div>
-  <script src="./xvue.js"></script>
+  <!-- <script src="./xvue.js"></script> -->
+  <script src="./xvue2.js"></script>
   <!-- <script src="./../../node_modules/vue/dist/vue.js"></script> -->
   <script>
     const app = new XVue({
@@ -25,6 +26,11 @@
         username:'',
         list:['写代码','打游戏']
       },
+      render() {
+        const p = document.createElement('p')
+        p.textContent = this.counter
+        return p
+      },
       methods: {
         addCounter() {
           this.counter++
@@ -34,6 +40,10 @@
         }
       },
     })
+
+    setInterval(() => {
+      app.counter ++
+    }, 1000)
   </script>
 </body>
 </html>
