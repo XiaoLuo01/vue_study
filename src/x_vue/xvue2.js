@@ -127,18 +127,152 @@ class XVue {
     const updateComponent = () => {
       // 执行 render
       const { render } = this.$options
-      // 用真实的dom
-      const el = render.call(this)
-      // 获取宿主元素的父节点
-      const parent = this.$el.parentElement
-      // 把渲染出来的真实dom插入到宿主元素的下一个兄弟节点
-      parent.insertBefore(el, this.$el.nextSibling)
-      // 然后删除宿主元素
-      parent.removeChild(this.$el)
-      this.$el = el
+      /* 用真实的dom */
+      // const el = render.call(this)
+      // // 获取宿主元素的父节点
+      // const parent = this.$el.parentElement
+      // // 把渲染出来的真实dom插入到宿主元素的下一个兄弟节点
+      // parent.insertBefore(el, this.$el.nextSibling)
+      // // 然后删除宿主元素
+      // parent.removeChild(this.$el)
+      // this.$el = el
+
+      // 调用render函数获取vnode
+      const vnode = render.call(this, this.$createElement)
+      this._update(vnode)
     }
     // 创建 watcher 实例
     new Watcher(this, updateComponent)
+  }
+
+  // h函数
+  $createElement (tag, props, children) {
+    return { tag, props, children }
+  }
+
+  // init和更新方法
+  _update (vnode) {
+    // 获取上一次的vnode
+    const prevVnode = this._vnode
+
+    if (!prevVnode) {
+      // init 初始化
+      this.__patch__(this.$el, vnode)
+    } else {
+      // update 更新
+      this.__patch__(prevVnode, vnode)
+    }
+  }
+
+  // diff,真正把vnode转化为真实dom
+  __patch__ (oldVnode, vnode) {
+    if (oldVnode.nodeType) {
+      // 初始化 init，传入的是真实dom
+      const parent = oldVnode.parentElement
+      const refElm = oldVnode.nextSibling
+      // 创建一颗dom树，递归遍历子节点
+      const el = this.createElm(vnode)
+      parent.insertBefore(el, refElm)
+      parent.removeChild(oldVnode)
+    } else {
+      // 更新操作 update
+      const el = (vnode.$elm = oldVnode.$elm)
+      // props
+      const oldProps = oldVnode.props || []
+      const newProps = vnode.props || []
+      for (const key in newProps) {
+        el.setAttribute(key, newProps[key])
+      }
+      // 老的属性新的没有就删除
+      for (const key in oldProps) {
+        if (!(key in newProps)) {
+          el.removeAttribute(key)
+        }
+      }
+
+      // children
+      const oldCh = oldVnode.children
+      const newCh = vnode.children
+      if (typeof newCh === 'string') {
+        if (typeof oldCh === 'string') {
+          // text
+          if (newCh !== oldCh) {
+            el.textContent = newCh
+          }
+        } else {
+          // 老的没有文本
+          el.textContent = newCh
+        }
+      } else {
+        // children array
+        if (typeof oldCh === 'string') {
+          // 老的是文本，新的是元素, 则清空创建新节点
+          el.innerHTML = ''
+          newCh.forEach(child => {
+            el.appendChild(this.createElm(child))
+          })
+        } else {
+          // 重排
+          this.updateChildren(el, oldCh, newCh)
+        }
+      }
+    }
+
+    // 保存新的vnode
+    this._vnode = vnode
+  }
+
+  // dom操作
+  createElm (vnode) {
+    const el = document.createElement(vnode.tag)
+
+    // props
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        const value = vnode.props[key]
+        el.setAttribute(key, value)
+      }
+    }
+
+    // children
+    if (vnode.children) {
+      if (typeof vnode.children === 'string') {
+        // 文本
+        el.textContent = vnode.children
+      } else {
+        // children array
+        vnode.children.forEach(v => {
+          const child = this.createElm(v)
+          el.appendChild(child)
+        })
+      }
+    }
+
+    // 保存真实的dom
+    vnode.$elm = el
+    return el
+  }
+
+  updateChildren (el, oldCh, newCh) {
+    const len = Math.min(oldCh.length, newCh.length)
+    // 直接patch所有的
+    for (let i = 0; i < len; i++) {
+      this.__patch__(oldCh[i], newCh[i])
+    }
+
+    // 新的还有剩说明有新增
+    if (newCh.length > oldCh.length) {
+      newCh.slice(len).forEach(child => {
+        el.appendChild(this.createElm(child))
+      })
+    }
+
+    // 老的还有说明有删除
+    else if (newCh.length < oldCh.length) {
+      oldCh.slice(len).forEach(child => {
+        el.removeChild(child.el)
+      })
+    }
   }
 }
 

@@ -26,10 +26,15 @@
         username:'',
         list:['写代码','打游戏']
       },
-      render() {
-        const p = document.createElement('p')
-        p.textContent = this.counter
-        return p
+      render(h) {
+        // const p = document.createElement('p')
+        // p.textContent = this.counter
+        // return p
+
+        // vnode
+        return h('div', {id: 'app'}, [
+          h('p', {class:'counter',title:this.counter+''}, this.counter+'')
+        ])
       },
       methods: {
         addCounter() {
